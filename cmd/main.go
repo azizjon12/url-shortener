@@ -12,6 +12,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
+	"github.com/azizjon12/url-shortener/internal/http-server/handlers/redirect"
 	"github.com/azizjon12/url-shortener/internal/http-server/handlers/url/save"
 	mwLogger "github.com/azizjon12/url-shortener/internal/http-server/middleware/logger"
 )
@@ -47,7 +48,8 @@ func main() {
 	router.Use(middleware.URLFormat) // URL parsing for incoming requests
 
 	router.Post("/url", save.New(log, storage))
-	// router.Get("/{alias}", redirect.New(log, storage))
+	router.Get("/{alias}", redirect.New(log, storage))
+	// router.Delete("/{alias}", remove.New(log, storage))
 
 	log.Info("starting server", slog.String("address", cfg.Address))
 
