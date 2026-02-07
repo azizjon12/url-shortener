@@ -1,4 +1,4 @@
-package redirect
+package remove
 
 import (
 	"errors"
@@ -13,54 +13,46 @@ import (
 	"github.com/go-chi/render"
 )
 
-//go:generate go run github.com/vektra/mockery/v2@v2.28.2 --name=URLGetter
-//
-// URLGetter is an interface for getting url by alias
-type URLGetter interface {
-	GetURL(alias string) (string, error)
+//go:generate go run github.com/vektra/mockery/v2@v2.28.2 --name=URLDeleter
+type URLDeleter interface {
+	DeleteURL(alias string) error
 }
 
-func New(log *slog.Logger, urlGetter URLGetter) http.HandlerFunc {
+func New(log *slog.Logger, urlDeleter URLDeleter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "handlers.url.redirect.New"
+		const op = "handlers.url.remove.New"
 
+		// Add op and request_id fields
 		log = log.With(
 			slog.String("op", op),
 			slog.String("request_id", middleware.GetReqID(r.Context())),
 		)
 
-		// chi router allows us to GET parameters with the name
 		alias := chi.URLParam(r, "alias")
 		if alias == "" {
 			log.Info("alias is empty")
 
 			render.JSON(w, r, resp.Error("invalid request"))
-
 			return
 		}
 
-		// Get URL with the alias in db
-		resURL, err := urlGetter.GetURL(alias)
+		err := urlDeleter.DeleteURL(alias)
 		if errors.Is(err, storage.ErrURLNotFound) {
 			log.Info("url not found", slog.String("alias", alias))
 
 			render.JSON(w, r, resp.Error("not found"))
-
 			return
 		}
 
 		if err != nil {
-			// Could not complete the search
-			log.Error("failed to get url", sl.Err(err))
+			log.Error("failed to delete url", sl.Err(err))
 
 			render.JSON(w, r, resp.Error("internal error"))
-
 			return
 		}
 
-		log.Info("got url", slog.String("url", resURL))
+		log.Info("url deleted", slog.String("alias", alias))
 
-		// Do Redirect to the found url
-		http.Redirect(w, r, resURL, http.StatusFound)
+		render.JSON(w, r, resp.OK())
 	}
 }
