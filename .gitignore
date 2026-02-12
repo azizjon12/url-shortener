@@ -1,0 +1,14 @@
+
+# macOS
+.DS_Store
+
+# local config
+config/local.yaml
+.env
+
+# local database
+storage/storage.db
+
+# tests
+tests/
+*.test

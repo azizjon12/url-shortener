@@ -48,9 +48,23 @@ func main() {
 	router.Use(middleware.Recoverer) // If there's a panic in the server, app should not close
 	router.Use(middleware.URLFormat) // URL parsing for incoming requests
 
-	router.Post("/url", save.New(log, storage))
+	// All routes in this router will start with prefix /url
+	router.Route("/url", func(r chi.Router) {
+		// Connect authentication
+		r.Use(middleware.BasicAuth("url-shortener", map[string]string{
+			// Pass credentials to middleware
+			cfg.HTTPServer.User: cfg.HTTPServer.Password,
+		}))
+
+		r.Post("/", save.New(log, storage))
+		r.Delete("/{alias}", remove.New(log, storage))
+
+	})
+
+	// router.Post("/url", save.New(log, storage))
+
 	router.Get("/{alias}", redirect.New(log, storage))
-	router.Delete("/{alias}", remove.New(log, storage))
+	// router.Delete("/url/{alias}", remove.New(log, storage))
 
 	log.Info("starting server", slog.String("address", cfg.Address))
 
@@ -59,7 +73,7 @@ func main() {
 		Handler:      router,
 		ReadTimeout:  cfg.HTTPServer.Timeout,
 		WriteTimeout: cfg.HTTPServer.Timeout,
-		IdleTimeout:  cfg.HTTPServer.IdleTmeout,
+		IdleTimeout:  cfg.HTTPServer.IdleTimeout,
 	}
 
 	if err := srv.ListenAndServe(); err != nil {
