@@ -4,7 +4,6 @@
 
 # local config
 config/local.yaml
-config/prod.yaml
 *.env
 
 # local database

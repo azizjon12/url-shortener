@@ -13,7 +13,7 @@ jobs:
     env:
       HOST: ec2-user@3.20.232.64
       DEPLOY_DIRECTORY: /opt/url-shortener
-      CONFIG_PATH: /opt/url-shortener/prod.yaml
+      CONFIG_PATH: /opt/url-shortener/config/prod.yaml
       ENV_FILE_PATH: /opt/url-shortener/config.env
 
     steps:
@@ -27,10 +27,15 @@ jobs:
         with:
           go-version: '1.22'
 
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc sqlite3 libsqlite3-dev
+
       - name: Build binary
         run: |
           go mod download
-          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+          GOOS=linux GOARCH=amd64 \
           go build -o url-shortener ./cmd
 
       - name: Install SSH tools
