@@ -4,11 +4,17 @@
 
 # local config
 config/local.yaml
-.env
+config/prod.yaml
+*.env
 
 # local database
 storage/storage.db
 
-# tests
+# build artifacts
+url-shortener
+bin/
+
+# test binaries and coverage
 tests/
 *.test
+coverage.out

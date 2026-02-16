@@ -1,0 +1,15 @@
+[Unit]
+Description=URL Shortener Service
+After=network.target
+
+[Service]
+Type=simple
+User=ec2-user
+WorkingDirectory=/opt/url-shortener
+EnvironmentFile=/opt/url-shortener/config.env
+ExecStart=/opt/url-shortener/url-shortener
+Restart=always
+RestartSec=4
+
+[Install]
+WantedBy=multi-user.target
